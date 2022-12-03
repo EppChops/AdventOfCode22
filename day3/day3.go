@@ -7,7 +7,6 @@ import (
 	"unicode"
 )
 
-
 func main() {
 	fileP := os.Args[1]
 
@@ -24,19 +23,19 @@ func main() {
 	i := 1
 	for r := 'a'; r <= 'z'; r++ {
 		priorities[r] = i
-		priorities[unicode.ToUpper(r)] = i + 26	
+		priorities[unicode.ToUpper(r)] = i + 26
 		i++
 	}
 
-	for scanner.Scan(){
+	for scanner.Scan() {
 		rucksack := []rune(scanner.Text())
-		mid := len(rucksack)/2
+		mid := len(rucksack) / 2
 
 		fstCompartment := rucksack[:mid]
 		sndCompartment := rucksack[mid:]
 
 		for _, cFst := range fstCompartment {
-			if (contains(sndCompartment, cFst)) {
+			if contains(sndCompartment, cFst) {
 				duplicates = append(duplicates, cFst)
 				break
 			}
@@ -62,6 +61,6 @@ func contains(arr []rune, item rune) bool {
 }
 func check(e error) {
 	if e != nil {
-			panic(e)
+		panic(e)
 	}
 }
