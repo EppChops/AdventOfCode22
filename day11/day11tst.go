@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"math/big"
+
+	//"math/big"
 	"os"
 	"regexp"
 	"strconv"
@@ -22,8 +23,13 @@ type Monkey struct {
 }
 
 type Item struct {
-	worryLvl *big.Int
+	worryLvl int64
+	millions int64
 }
+
+var modConstant = 1
+
+const BIG = 1000000000
 
 func main() {
 	fileP := os.Args[1]
@@ -43,10 +49,15 @@ func main() {
 			//inspect
 			for _, item := range m.items {
 				worrylvl := m.inspect(item)
-				//worrylvl = worrylvl / 3
+				//fmt.Println(worrylvl, item.millions)
+				
+				worrylvl = worrylvl % int64(modConstant)
 				item.worryLvl = worrylvl
+
+				//worrylvl = worrylvl / 3
+				//item.worryLvl = worrylvl
 				//fmt.Println(worrylvl, item.worryLvl)
-				throwTo := m.testThrow(worrylvl)
+				throwTo := m.testThrow(item)
 				for _, x := range monkeys {
 					if x.id == throwTo {
 						m.throw(x, item)
@@ -73,38 +84,45 @@ func main() {
 
 }
 
-
-func (m *Monkey) throw(x *Monkey, item * Item) {
+func (m *Monkey) throw(x *Monkey, item *Item) {
 	x.items = append(x.items, item)
 	// remove from monke
 }
 
-func (m *Monkey) testThrow(worryLvl *big.Int) int {
-	if new(big.Int).Mod(worryLvl, big.NewInt(int64(m.test))).Cmp(big.NewInt(0)) == 0{
-		//fmt.Println("trueThrow")
+func (m *Monkey) testThrow(item *Item) int {
+	//if new(big.Int).Mod(worryLvl, big.NewInt(int64(m.test))).Cmp(big.NewInt(0)) == 0{
+
+	if (item.worryLvl % int64(m.test)) == 0 {
 		return m.trueThrow
+
 	}
 	//fmt.Println("falseThrow")
 	return m.falseThrow
 }
 
-func (m *Monkey) inspect(item *Item) *big.Int {
+func (m *Monkey) inspect(item *Item) int64 {
 	m.inspections++
-	
+
 	if m.operationOp == "*" {
+
 		if m.operation == 0 {
-			d := new(big.Int).Mul(item.worryLvl, item.worryLvl)
-			return d
+			//d := new(big.Int).Mul(item.worryLvl, item.worryLvl)
+			(*item).millions = item.millions * item.millions
+			return item.worryLvl * item.worryLvl
 		} else {
-			return new(big.Int).Mul(item.worryLvl, big.NewInt(int64(m.operation)))
+			(*item).millions = item.millions * item.worryLvl
+			return item.worryLvl * int64(m.operation)
+			//return new(big.Int).Mul(item.worryLvl, big.NewInt(int64(m.operation)))
 		}
 	}
 
 	if m.operation == 0 {
-		return new(big.Int).Add(item.worryLvl, item.worryLvl)
-		
+		//return new(big.Int).Add(item.worryLvl, item.worryLvl)
+		(*item).millions = item.millions * 2
+		return item.worryLvl * 2
 	}
-	return new(big.Int).Add(item.worryLvl, big.NewInt(int64(m.operation)))
+	//return new(big.Int).Add(item.worryLvl, big.NewInt(int64(m.operation)))
+	return item.worryLvl + int64(m.operation)
 }
 
 func parseMonkey(s string) Monkey {
@@ -118,7 +136,8 @@ func parseMonkey(s string) Monkey {
 	numbers := re.FindAllString(lines[1], -1)
 	for _, nr := range numbers {
 		item, _ := strconv.Atoi(nr)
-		m.items = append(m.items, &Item{big.NewInt(int64(item))})
+
+		m.items = append(m.items, &Item{int64(item), 0})
 	}
 	operation := strings.Split(lines[2], " ")
 	op := operation[6]
@@ -127,8 +146,10 @@ func parseMonkey(s string) Monkey {
 		m.operation = 0
 	} else {
 		m.operation, _ = strconv.Atoi(operation[7])
+
 	}
 	divisible, _ := strconv.Atoi(re.FindString(lines[3]))
+	modConstant *= divisible
 	trueThrow, _ := strconv.Atoi(re.FindString(lines[4]))
 	falseThrow, _ := strconv.Atoi(re.FindString(lines[5]))
 	m.test = divisible
